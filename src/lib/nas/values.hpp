@@ -9,6 +9,7 @@
 #pragma once
 
 #include "enums.hpp"
+#include "ie3.hpp"
 
 #include <optional>
 #include <utility>
@@ -253,6 +254,26 @@ struct VPlmnIdAccessTech
 
     static void Encode(const VPlmnIdAccessTech &value, OctetString &stream);
     static VPlmnIdAccessTech Decode(const OctetView &stream);
+};
+
+struct VQoSRule
+{
+    octet qri;
+    octet2 ruleLength;
+    EQoSDqr dqr;
+    EQoSOperationCode ruleOperationCode;
+    int numberOfPacketFilter;
+    OctetString packetFilters; //std::vector<VPacketFilter>
+    std::optional<octet> rulePrecedence;
+    std::optional<EQoSSegregationBit> segregation;
+    std::optional<int> qfi;
+
+    VQoSRule(const octet &qri, const octet2 &ruleLength, const int &numberOfPacketFilter,
+             const EQoSDqr &dqr, const EQoSOperationCode &ruleOperationCode);
+
+    static void Encode(const VQoSRule &value, OctetString &stream);
+    static VQoSRule Decode(const OctetView &stream);
+
 };
 
 } // namespace nas

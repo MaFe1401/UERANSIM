@@ -157,10 +157,10 @@ struct IEMappedEpsBearerContexts : InformationElement6
 
 struct IEQoSRules : InformationElement6
 {
-    OctetString data;
+    std::vector<VQoSRule> list{};
 
     IEQoSRules() = default;
-    explicit IEQoSRules(OctetString &&data);
+    explicit IEQoSRules(std::vector<VRejectedSNssai> &&list);
 
     static IEQoSRules Decode(const OctetView &stream, int length);
     static void Encode(const IEQoSRules &ie, OctetString &stream);

@@ -750,6 +750,29 @@ enum class EQoSOperationCode
     CREATE_NEW = 0b001,
     DELETE_EXISTING = 0b010,
     MODIFY_EXISTING = 0b011,
+    MODIFY_EXISTING_RULE_REPLACE_PACKET_FILTERS = 0b100,
+    MODIFY_EXISTING_RULE_DELETE_PACKET_FILTERS = 0b101,
+    MODIFY_EXISTING_RULE_WITHOUT_PACKET_FILTERS = 0b110,
+};
+
+enum class EQoSSegregationBit
+{
+    SEGREGATION_NOT_REQUESTED = 0b0,
+    SEGREGATION_REQUESTED = 0b1,
+};
+
+enum class EQoSDqr
+{
+    NOT_DEFALUT_QoS_RULE = 0b0,
+    DEFALUT_QoS_RULE = 0b1,
+};
+
+enum class EPacketFilterDirection
+{
+    RESERVED = 0b00,
+    DOWNLINK = 0b01,
+    UPLINK = 0b10,
+    BIDIRECTIONAL = 0b11,
 };
 
 Json ToJson(const EPduSessionType &v);

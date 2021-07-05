@@ -544,4 +544,36 @@ VPlmnIdAccessTech VPlmnIdAccessTech::Decode(const OctetView &stream)
     return VPlmnIdAccessTech{plmn, stream.read2()};
 }
 
+VQoSRule::VQoSRule(const octet &qri, const octet2 &ruleLength, const int &numberOfPacketFilter,const EQoSDqr &dqr,
+                   const EQoSOperationCode &ruleOperationCode)
+: qri(qri), ruleLength(ruleLength), dqr(dqr),
+      ruleOperationCode(ruleOperationCode), numberOfPacketFilter(numberOfPacketFilter)
+{
+}
+void VQoSRule::Encode(const VQoSRule &value, OctetString &stream)
+{
+    //TODO: Implement
+}
+VQoSRule VQoSRule::Decode(const OctetView &stream)
+{
+    auto qri = stream.read();
+    auto ruleLength = stream.read2();
+    auto octet7 = stream.read();
+    auto numberOfPacketFilter = octet7 & 0xF;//15
+    auto dqr =  static_cast<EQoSDqr>(octet7 >> 4 & 0x1); //16
+    auto ruleOperationCode = static_cast<EQoSOperationCode>(octet7 >> 5 & 0x7);
+    auto qosRule = VQoSRule(qri, ruleLength, numberOfPacketFilter, dqr, ruleOperationCode);
+    /*std::vector<VPacketFilter> packetFilters;
+    for (int i = 0; i < numberOfPacketFilter; i++)
+        packetFilters.push_back(VPacketFilter::Decode(stream));*/
+    qosRule.packetFilters = stream.readOctetString(numberOfPacketFilter);
+    if(stream.hasNext()) {
+        qosRule.rulePrecedence = stream.read();
+        if(stream.hasNext()){
+           auto lastOctet = stream.read();
+           qosRule.qfi = lastOctet & 0x3F;
+           qosRule.segregation = static_cast<EQoSSegregationBit>(lastOctet >> 6 & 0x1);
+        }
+    }
+}
 } // namespace nas
