@@ -101,6 +101,9 @@ void NasSm::receiveSmMessage(const nas::SmMessage &msg)
     case nas::EMessageType::FIVEG_SM_STATUS:
         receiveSmStatus((const nas::FiveGSmStatus &)msg);
         break;
+    case nas::EMessageType::PDU_SESSION_MODIFICATION_COMMAND:
+        receiveModifyCommand((const nas::PduSessionModificationCommand &)msg);
+        break;
     default:
         m_logger->err("Unhandled NAS SM message received: %d", (int)msg.messageType);
         break;

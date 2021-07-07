@@ -16,6 +16,7 @@
 #include <utils/nts.hpp>
 #include <utils/octet_string.hpp>
 
+#include <asn/ngap/ASN_NGAP_QosFlowAddOrModifyRequestList.h>
 #include <asn/ngap/ASN_NGAP_QosFlowSetupRequestList.h>
 #include <asn/rrc/ASN_RRC_InitialUE-Identity.h>
 
@@ -258,6 +259,19 @@ struct PduSessionResource
     asn::Unique<ASN_NGAP_QosFlowSetupRequestList> qosFlows{};
 
     PduSessionResource(const int ueId, const int psi) : ueId(ueId), psi(psi)
+    {
+    }
+};
+
+struct PduSessionResourceModify
+{
+    const int ueId;
+    const int psi;
+
+    asn::Unique<ASN_NGAP_QosFlowAddOrModifyRequestList> qosFlowsToBeAddedOrModified{};
+    AggregateMaximumBitRate sessionAmbr{};
+
+    PduSessionResourceModify(const int ueId, const int psi) : ueId(ueId), psi(psi)
     {
     }
 };

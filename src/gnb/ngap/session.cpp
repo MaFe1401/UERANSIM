@@ -19,6 +19,9 @@
 #include <asn/ngap/ASN_NGAP_AssociatedQosFlowList.h>
 #include <asn/ngap/ASN_NGAP_GTPTunnel.h>
 #include <asn/ngap/ASN_NGAP_PDUSessionResourceFailedToSetupItemSURes.h>
+#include <asn/ngap/ASN_NGAP_PDUSessionResourceModifyItemModReq.h>
+#include <asn/ngap/ASN_NGAP_PDUSessionResourceModifyRequest.h>
+#include <asn/ngap/ASN_NGAP_PDUSessionResourceModifyRequestTransfer.h>
 #include <asn/ngap/ASN_NGAP_PDUSessionResourceReleaseCommand.h>
 #include <asn/ngap/ASN_NGAP_PDUSessionResourceReleaseResponse.h>
 #include <asn/ngap/ASN_NGAP_PDUSessionResourceReleaseResponseTransfer.h>
@@ -36,10 +39,132 @@
 #include <asn/ngap/ASN_NGAP_QosFlowPerTNLInformationList.h>
 #include <asn/ngap/ASN_NGAP_QosFlowSetupRequestItem.h>
 #include <asn/ngap/ASN_NGAP_QosFlowSetupRequestList.h>
+#include <asn/ngap/ASN_NGAP_QosFlowAddOrModifyRequestItem.h>
+#include <asn/ngap/ASN_NGAP_QosFlowAddOrModifyRequestList.h>
+#include <asn/ngap/ASN_NGAP_PDUSessionResourceModifyResponseTransfer.h>
+#include <asn/ngap/ASN_NGAP_QosFlowAddOrModifyResponseList.h>
+#include <asn/ngap/ASN_NGAP_QosFlowAddOrModifyResponseItem.h>
+#include <asn/ngap/ASN_NGAP_PDUSessionResourceModifyItemModRes.h>
+#include <asn/ngap/ASN_NGAP_PDUSessionResourceModifyResponse.h>
 
 namespace nr::gnb
 {
 
+
+void NgapTask::receiveSessionResourceModifyRequest(int amfId, ASN_NGAP_PDUSessionResourceModifyRequest *msg){
+    std::vector<ASN_NGAP_PDUSessionResourceModifyItemModRes *> successList;
+    std::vector<ASN_NGAP_PDUSessionResourceFailedToModifyItemModRes *> failedList;
+    auto *ue = findUeByNgapIdPair(amfId, ngap_utils::FindNgapIdPair(msg));
+    if (ue == nullptr)
+        return;
+    auto *ieList = asn::ngap::GetProtocolIe(msg, ASN_NGAP_ProtocolIE_ID_id_PDUSessionResourceModifyListModReq);
+    if(ieList) {
+        auto &list = ieList->PDUSessionResourceModifyListModReq.list;
+        for (int i = 0; i < list.count; i++) {
+            auto &item = list.array[i];
+            auto *transfer = ngap_encode::Decode<ASN_NGAP_PDUSessionResourceModifyRequestTransfer>(
+                asn_DEF_ASN_NGAP_PDUSessionResourceModifyRequestTransfer,
+                item->pDUSessionResourceModifyRequestTransfer);
+            if (transfer == nullptr)
+            {
+                m_logger->err(
+                    "Unable to decode a PDU session resource setup request transfer. Ignoring the relevant item");
+                asn::Free(asn_DEF_ASN_NGAP_PDUSessionResourceModifyRequestTransfer, transfer);
+                continue;
+            }
+            auto *resource = new PduSessionResourceModify(ue->ctxId, static_cast<int>(item->pDUSessionID));
+
+            auto *ie = asn::ngap::GetProtocolIe(transfer, ASN_NGAP_ProtocolIE_ID_id_PDUSessionAggregateMaximumBitRate);
+            if (ie)
+            {
+                resource->sessionAmbr.dlAmbr =
+                    asn::GetUnsigned64(ie->PDUSessionAggregateMaximumBitRate.pDUSessionAggregateMaximumBitRateDL) /
+                    8ull;
+                resource->sessionAmbr.ulAmbr =
+                    asn::GetUnsigned64(ie->PDUSessionAggregateMaximumBitRate.pDUSessionAggregateMaximumBitRateUL) /
+                    8ull;
+            }
+
+            ie = asn::ngap::GetProtocolIe(transfer, ASN_NGAP_ProtocolIE_ID_id_QosFlowAddOrModifyRequestList);
+            if (ie)
+            {
+                auto *ptr = asn::New<ASN_NGAP_QosFlowAddOrModifyRequestList>();
+                asn::DeepCopy(asn_DEF_ASN_NGAP_QosFlowAddOrModifyRequestList, ie->QosFlowAddOrModifyRequestList, ptr);
+                resource->qosFlowsToBeAddedOrModified = asn::WrapUnique(ptr, asn_DEF_ASN_NGAP_QosFlowAddOrModifyRequestList);
+            }
+            modifyPduSessionResource(resource);
+            if (item->nAS_PDU)
+                deliverDownlinkNas(ue->ctxId, asn::GetOctetString(*item->nAS_PDU));
+            auto *tr = asn::New<ASN_NGAP_PDUSessionResourceModifyResponseTransfer>();
+            tr->qosFlowAddOrModifyResponseList = asn::New<ASN_NGAP_QosFlowAddOrModifyResponseList>();
+            auto &qosList = resource->qosFlowsToBeAddedOrModified->list;
+            for (int iQos = 0; iQos < qosList.count; iQos++)
+            {
+                auto *associatedQosFlowItem = asn::New<ASN_NGAP_QosFlowAddOrModifyResponseItem>();
+                associatedQosFlowItem->qosFlowIdentifier = qosList.array[iQos]->qosFlowIdentifier;
+                asn::SequenceAdd(*tr->qosFlowAddOrModifyResponseList, associatedQosFlowItem);
+            }
+            OctetString encodedTr =
+                ngap_encode::EncodeS(asn_DEF_ASN_NGAP_PDUSessionResourceModifyResponseTransfer, tr);
+
+            if (encodedTr.length() == 0)
+                throw std::runtime_error("PDUSessionResourceModifyResponseTransfer encoding failed");
+
+            asn::Free(asn_DEF_ASN_NGAP_PDUSessionResourceModifyResponseTransfer, tr);
+
+            auto *res = asn::New<ASN_NGAP_PDUSessionResourceModifyItemModRes>();
+            res->pDUSessionID = resource->psi;
+            asn::SetOctetString(res->pDUSessionResourceModifyResponseTransfer, encodedTr);
+
+            successList.push_back(res);
+        }
+    }
+    std::vector<ASN_NGAP_PDUSessionResourceModifyResponseIEs *> responseIes;
+    if (!successList.empty())
+   {
+       auto *ie = asn::New<ASN_NGAP_PDUSessionResourceModifyResponseIEs>();
+       ie->id = ASN_NGAP_ProtocolIE_ID_id_PDUSessionResourceModifyListModRes;
+       ie->criticality = ASN_NGAP_Criticality_ignore;
+       ie->value.present = ASN_NGAP_PDUSessionResourceModifyResponseIEs__value_PR_PDUSessionResourceModifyListModRes;
+
+       for (auto &item : successList)
+            asn::SequenceAdd(ie->value.choice.PDUSessionResourceModifyListModRes, item);
+
+        responseIes.push_back(ie);
+    }
+
+    if (!failedList.empty())
+    {
+        auto *ie = asn::New<ASN_NGAP_PDUSessionResourceModifyResponseIEs>();
+        ie->id = ASN_NGAP_ProtocolIE_ID_id_PDUSessionResourceFailedToModifyListModRes;
+        ie->criticality = ASN_NGAP_Criticality_ignore;
+        ie->value.present =
+            ASN_NGAP_PDUSessionResourceModifyResponseIEs__value_PR_PDUSessionResourceFailedToModifyListModRes;
+
+        for (auto &item : failedList)
+            asn::SequenceAdd(ie->value.choice.PDUSessionResourceFailedToModifyListModRes, item);
+
+        responseIes.push_back(ie);
+    }
+
+    auto *respPdu = asn::ngap::NewMessagePdu<ASN_NGAP_PDUSessionResourceModifyResponse>(responseIes);
+    sendNgapUeAssociated(ue->ctxId, respPdu);
+
+    if (failedList.empty())
+        m_logger->info("PDU session resource(s) modify for UE[%d] count[%d]", ue->ctxId,
+                       static_cast<int>(successList.size()));
+    else if (successList.empty())
+        m_logger->err("PDU session resource(s) modify was failed for UE[%d] count[%d]", ue->ctxId,
+                      static_cast<int>(failedList.size()));
+    else
+        m_logger->err("PDU session modify is partially successful for UE[%d], success[%d], failed[%d]",
+                      static_cast<int>(successList.size()), static_cast<int>(failedList.size()));
+}
+void NgapTask::modifyPduSessionResource(PduSessionResourceModify *resource) {
+    auto *w = new NmGnbNgapToGtp(NmGnbNgapToGtp::SESSION_MODIFY);
+    w->sessionModify = resource;
+    m_base->gtpTask->push(w);
+}
 void NgapTask::receiveSessionResourceSetupRequest(int amfId, ASN_NGAP_PDUSessionResourceSetupRequest *msg)
 {
     std::vector<ASN_NGAP_PDUSessionResourceSetupItemSURes *> successList;
@@ -102,7 +227,6 @@ void NgapTask::receiveSessionResourceSetupRequest(int amfId, ASN_NGAP_PDUSession
             {
                 auto *ptr = asn::New<ASN_NGAP_QosFlowSetupRequestList>();
                 asn::DeepCopy(asn_DEF_ASN_NGAP_QosFlowSetupRequestList, ie->QosFlowSetupRequestList, ptr);
-
                 resource->qosFlows = asn::WrapUnique(ptr, asn_DEF_ASN_NGAP_QosFlowSetupRequestList);
             }
 
@@ -130,7 +254,6 @@ void NgapTask::receiveSessionResourceSetupRequest(int amfId, ASN_NGAP_PDUSession
             {
                 if (item->pDUSessionNAS_PDU)
                     deliverDownlinkNas(ue->ctxId, asn::GetOctetString(*item->pDUSessionNAS_PDU));
-
                 auto *tr = asn::New<ASN_NGAP_PDUSessionResourceSetupResponseTransfer>();
 
                 auto &qosList = resource->qosFlows->list;

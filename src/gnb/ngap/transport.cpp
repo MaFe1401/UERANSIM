@@ -292,6 +292,9 @@ void NgapTask::handleSctpMessage(int amfId, uint16_t stream, const UniqueBuffer 
         case ASN_NGAP_InitiatingMessage__value_PR_Paging:
             receivePaging(amf->ctxId, &value.choice.Paging);
             break;
+        case ASN_NGAP_InitiatingMessage__value_PR_PDUSessionResourceModifyRequest:
+            receiveSessionResourceModifyRequest(amf->ctxId, &value.choice.PDUSessionResourceModifyRequest);
+            break;
         default:
             m_logger->err("Unhandled NGAP initiating-message received (%d)", value.present);
             break;

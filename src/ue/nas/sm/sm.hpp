@@ -79,6 +79,9 @@ class NasSm
     void receiveReleaseReject(const nas::PduSessionReleaseReject &msg);
     void receiveReleaseCommand(const nas::PduSessionReleaseCommand &msg);
 
+  private: /* Session Modify */
+    void receiveModifyCommand(const nas::PduSessionModificationCommand &msg);
+
   private: /* Timer */
     std::unique_ptr<UeTimer> newTransactionTimer(int code);
     void onTimerExpire(UeTimer &timer);

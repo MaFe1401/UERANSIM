@@ -11,6 +11,7 @@
 #include <optional>
 #include <unordered_map>
 
+#include <asn/ngap/ASN_NGAP_PDUSessionResourceModifyRequest.h>
 #include <gnb/nts.hpp>
 #include <gnb/types.hpp>
 #include <lib/app/monitor.hpp>
@@ -107,7 +108,8 @@ class NgapTask : public NtsTask
 
     /* PDU session management */
     void receiveSessionResourceSetupRequest(int amfId, ASN_NGAP_PDUSessionResourceSetupRequest *msg);
-    void receiveSessionResourceReleaseCommand(int amfId, ASN_NGAP_PDUSessionResourceReleaseCommand *msg);
+    void receiveSessionResourceReleaseCommand(int amfId, ASN_NGAP_PDUSessionResourceReleaseCommand *msg);\
+    void receiveSessionResourceModifyRequest(int amfId, ASN_NGAP_PDUSessionResourceModifyRequest *msg);
     std::optional<NgapCause> setupPduSessionResource(PduSessionResource *resource);
 
     /* UE context management */
@@ -123,6 +125,7 @@ class NgapTask : public NtsTask
     /* Radio resource control */
     void handleRadioLinkFailure(int ueId);
     void receivePaging(int amfId, ASN_NGAP_Paging *msg);
+    void modifyPduSessionResource(PduSessionResourceModify *pModify);
 };
 
 } // namespace nr::gnb

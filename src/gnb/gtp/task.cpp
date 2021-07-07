@@ -14,6 +14,7 @@
 #include <utils/libc_error.hpp>
 
 #include <asn/ngap/ASN_NGAP_QosFlowSetupRequestItem.h>
+#include <asn/ngap/ASN_NGAP_QosFlowAddOrModifyRequestItem.h>
 
 namespace nr::gnb
 {
@@ -68,6 +69,10 @@ void GtpTask::onLoop()
         }
         case NmGnbNgapToGtp::SESSION_CREATE: {
             handleSessionCreate(w->resource);
+            break;
+        }
+        case NmGnbNgapToGtp::SESSION_MODIFY: {
+            handleSessionModify(w->sessionModify);
             break;
         }
         case NmGnbNgapToGtp::SESSION_RELEASE: {
@@ -125,6 +130,28 @@ void GtpTask::handleSessionCreate(PduSessionResource *session)
 
     updateAmbrForUe(session->ueId);
     updateAmbrForSession(sessionInd);
+}
+
+void GtpTask::handleSessionModify(PduSessionResourceModify *pResource)
+{
+    if (!m_ueContexts.count(pResource->ueId))
+    {
+        m_logger->err("PDU session resource could not be created, UE context with ID[%d] not found", pResource->ueId);
+        return;
+    }
+    uint64_t sessionInd = MakeSessionResInd(pResource->ueId, pResource->psi);
+    auto &pduSession = m_pduSessions[sessionInd];
+    auto toModifyOrAddFlows = pResource->qosFlowsToBeAddedOrModified->list;
+    //TODO: check for modification
+    for (int i = 0; i < toModifyOrAddFlows.count; i++) {
+        auto toModifyOrAddFlow = toModifyOrAddFlows.array[i];
+        auto *flow = asn::New<ASN_NGAP_QosFlowSetupRequestItem>();
+        flow->qosFlowIdentifier = toModifyOrAddFlow->qosFlowIdentifier;
+        flow->qosFlowLevelQosParameters = *(toModifyOrAddFlow->qosFlowLevelQosParameters);
+        flow->e_RAB_ID = toModifyOrAddFlow->e_RAB_ID;
+        flow->iE_Extensions = toModifyOrAddFlow->iE_Extensions;
+        asn::SequenceAdd(*pduSession->qosFlows, flow);
+    }
 }
 
 void GtpTask::handleSessionRelease(int ueId, int psi)

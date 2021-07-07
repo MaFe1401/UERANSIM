@@ -217,6 +217,7 @@ struct NmGnbNgapToGtp : NtsMessage
         UE_CONTEXT_UPDATE,
         UE_CONTEXT_RELEASE,
         SESSION_CREATE,
+        SESSION_MODIFY,
         SESSION_RELEASE,
     } present;
 
@@ -225,6 +226,9 @@ struct NmGnbNgapToGtp : NtsMessage
 
     // SESSION_CREATE
     PduSessionResource *resource{};
+
+    // SESSION_MODIFY
+    PduSessionResourceModify *sessionModify{};
 
     // UE_CONTEXT_RELEASE
     // SESSION_RELEASE
