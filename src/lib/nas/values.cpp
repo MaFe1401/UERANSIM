@@ -544,36 +544,80 @@ VPlmnIdAccessTech VPlmnIdAccessTech::Decode(const OctetView &stream)
     return VPlmnIdAccessTech{plmn, stream.read2()};
 }
 
-VQoSRule::VQoSRule(const octet &qri, const octet2 &ruleLength, const int &numberOfPacketFilter,const EQoSDqr &dqr,
+VQoSRule::VQoSRule(const octet &qri, const octet2 &ruleLength, const int &numberOfPacketFilter, const EQoSDqr &dqr,
                    const EQoSOperationCode &ruleOperationCode)
-: qri(qri), ruleLength(ruleLength), dqr(dqr),
-      ruleOperationCode(ruleOperationCode), numberOfPacketFilter(numberOfPacketFilter)
+    : qri(qri), ruleLength(ruleLength), dqr(dqr), ruleOperationCode(ruleOperationCode),
+      numberOfPacketFilter(numberOfPacketFilter)
 {
 }
+
 void VQoSRule::Encode(const VQoSRule &value, OctetString &stream)
 {
-    //TODO: Implement
+    stream.appendOctet(value.qri);
+    stream.appendOctet2(value.ruleLength);
+    stream.appendOctet((static_cast<int>(value.ruleOperationCode) << 5) | (static_cast<int>(value.dqr) << 4) |
+                       (value.numberOfPacketFilter & 0b1111));
+    for (int i = 0; i < value.numberOfPacketFilter; i++)
+    {
+        if (value.ruleOperationCode != EQoSOperationCode::MODIFY_EXISTING_RULE_DELETE_PACKET_FILTERS)
+        {
+            stream.appendOctet((0 << 6) | (static_cast<int>(value.packetFilters[i].direction.value()) << 4) |
+                               (value.packetFilters[i].packetFilterId & 0b1111));
+            stream.appendOctet(value.packetFilters[i].packetFilterLength.value());
+            stream.append(value.packetFilters[i].packetFilterContent.value());
+        } else {
+            stream.appendOctet((0 << 4) | (value.packetFilters[i].packetFilterId & 0b1111));
+        }
+    }
+    if(value.rulePrecedence.has_value()) {
+        stream.appendOctet(static_cast<int>(value.rulePrecedence.value()));
+        if(value.qfi.has_value() && value.segregation.has_value()) {
+            stream.appendOctet((0 << 7) | (static_cast<int>(value.segregation.value()) << 6) |
+                               (value.qfi.value() & 0b111111));
+        }
+    }
+
 }
+
 VQoSRule VQoSRule::Decode(const OctetView &stream)
 {
     auto qri = stream.read();
     auto ruleLength = stream.read2();
     auto octet7 = stream.read();
-    auto numberOfPacketFilter = octet7 & 0xF;//15
-    auto dqr =  static_cast<EQoSDqr>(octet7 >> 4 & 0x1); //16
+    auto numberOfPacketFilter = octet7 & 0xF;           // 15
+    auto dqr = static_cast<EQoSDqr>(octet7 >> 4 & 0x1); // 16
     auto ruleOperationCode = static_cast<EQoSOperationCode>(octet7 >> 5 & 0x7);
     auto qosRule = VQoSRule(qri, ruleLength, numberOfPacketFilter, dqr, ruleOperationCode);
-    /*std::vector<VPacketFilter> packetFilters;
+    std::vector<VPacketFilter> packetFilters;
     for (int i = 0; i < numberOfPacketFilter; i++)
-        packetFilters.push_back(VPacketFilter::Decode(stream));*/
-    qosRule.packetFilters = stream.readOctetString(numberOfPacketFilter);
-    if(stream.hasNext()) {
+    {
+        auto octet = stream.read();
+        int packetFilterId = octet & 0xF;
+        auto packetFilter = VPacketFilter(packetFilterId);
+        if (ruleOperationCode != EQoSOperationCode::MODIFY_EXISTING_RULE_DELETE_PACKET_FILTERS)
+        {
+            packetFilter.direction = static_cast<EPacketFilterDirection>(octet >> 4 & 0x3);
+            auto packetFilterLength = stream.read();
+            packetFilter.packetFilterLength = packetFilterLength;
+            packetFilter.packetFilterContent = stream.readOctetString(packetFilterLength);
+        }
+        packetFilters.push_back(std::move(packetFilter));
+    }
+    qosRule.packetFilters = std::move(packetFilters);
+    if (stream.hasNext())
+    {
         qosRule.rulePrecedence = stream.read();
-        if(stream.hasNext()){
-           auto lastOctet = stream.read();
-           qosRule.qfi = lastOctet & 0x3F;
-           qosRule.segregation = static_cast<EQoSSegregationBit>(lastOctet >> 6 & 0x1);
+        if (stream.hasNext())
+        {
+            auto lastOctet = stream.read();
+            qosRule.qfi = lastOctet & 0x3F;
+            qosRule.segregation = static_cast<EQoSSegregationBit>(lastOctet >> 6 & 0x1);
         }
     }
+    return qosRule;
+}
+
+VPacketFilter::VPacketFilter(const int &packetFilterId) : packetFilterId(packetFilterId)
+{
 }
 } // namespace nas

@@ -215,20 +215,20 @@ void IEMappedEpsBearerContexts::Encode(const IEMappedEpsBearerContexts &ie, Octe
     stream.append(ie.data);
 }
 
-IEQoSRules::IEQoSRules(std::vector<VRejectedSNssai> &&list) : list(std::move(list))
+IEQoSRules::IEQoSRules(std::vector<VQoSRule>  &&data) : data(std::move(data))
 {
 }
 
 IEQoSRules IEQoSRules::Decode(const OctetView &stream, int length)
 {
     IEQoSRules qosRules;
-    DecodeListVal(stream, length, qosRules.list);
+    DecodeListVal(stream, length, qosRules.data);
     return qosRules;
 }
 
 void IEQoSRules::Encode(const IEQoSRules &ie, OctetString &stream)
 {
-    for (auto &x : ie.list)
+    for (auto &x : ie.data)
         VQoSRule::Encode(x, stream);
 }
 

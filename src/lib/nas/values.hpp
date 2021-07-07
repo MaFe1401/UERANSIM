@@ -9,7 +9,6 @@
 #pragma once
 
 #include "enums.hpp"
-#include "ie3.hpp"
 
 #include <optional>
 #include <utility>
@@ -256,6 +255,16 @@ struct VPlmnIdAccessTech
     static VPlmnIdAccessTech Decode(const OctetView &stream);
 };
 
+struct VPacketFilter
+{
+    int packetFilterId;
+    std::optional<EPacketFilterDirection> direction;
+    std::optional<octet> packetFilterLength;
+    std::optional<OctetString> packetFilterContent{};
+
+    explicit VPacketFilter(const int &packetFilterId);
+};
+
 struct VQoSRule
 {
     octet qri;
@@ -263,7 +272,7 @@ struct VQoSRule
     EQoSDqr dqr;
     EQoSOperationCode ruleOperationCode;
     int numberOfPacketFilter;
-    OctetString packetFilters; //std::vector<VPacketFilter>
+    std::vector<VPacketFilter> packetFilters;
     std::optional<octet> rulePrecedence;
     std::optional<EQoSSegregationBit> segregation;
     std::optional<int> qfi;
