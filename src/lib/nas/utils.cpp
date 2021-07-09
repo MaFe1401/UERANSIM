@@ -550,4 +550,9 @@ void RemoveFromServiceAreaList(IEServiceAreaList &list, const VTrackingAreaIdent
     }
 }
 
+bool QosRulesListContains(const nas::IEQoSRules &list, const VQoSRule &rule)
+{
+    return std::any_of(list.list.begin(), list.list.end(),
+                       [&rule](auto &element) { return rule.qri == element.qri; });
+}
 } // namespace nas::utils
