@@ -551,6 +551,24 @@ VQoSRule::VQoSRule(const octet &qri, const octet2 &ruleLength, const int &number
 {
 }
 
+VQoSRule::VQoSRule(const VQoSRule &rule){
+    qri = rule.qri;
+    ruleLength = rule.ruleLength;
+    dqr = rule.dqr;
+    ruleOperationCode = rule.ruleOperationCode;
+    numberOfPacketFilter = rule.numberOfPacketFilter;
+    copy(rule.packetFilters.begin(), rule.packetFilters.end(), back_inserter(packetFilters));
+    if(rule.rulePrecedence.has_value()) {
+        rulePrecedence = rule.rulePrecedence;
+    }
+    if(rule.segregation.has_value()) {
+        segregation = rule.segregation;
+    }
+    if(rule.qfi.has_value()) {
+        qfi = rule.qfi;
+    }
+}
+
 void VQoSRule::Encode(const VQoSRule &value, OctetString &stream)
 {
     stream.appendOctet(value.qri);
@@ -619,5 +637,17 @@ VQoSRule VQoSRule::Decode(const OctetView &stream)
 
 VPacketFilter::VPacketFilter(const int &packetFilterId) : packetFilterId(packetFilterId)
 {
+}
+VPacketFilter::VPacketFilter(const VPacketFilter &packetFilter) {
+    packetFilterId = packetFilter.packetFilterId;
+    if(packetFilter.direction.has_value()) {
+        direction = packetFilter.direction;
+    }
+    if(packetFilter.packetFilterLength.has_value()) {
+        packetFilterLength = packetFilter.packetFilterLength;
+    }
+    if(packetFilter.packetFilterContent.has_value()) {
+        packetFilterContent = packetFilter.packetFilterContent->copy();
+    }
 }
 } // namespace nas

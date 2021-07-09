@@ -47,7 +47,6 @@ void NasSm::receiveModifyCommand(const nas::PduSessionModificationCommand &msg)
                 {
                     //ps->authorizedQoSRules->list.push_back(qosRule);
                     ps->authorizedQoSRules->list.push_back(qosRule);
-                    m_logger->debug("t");
                 }
                 else
                 {

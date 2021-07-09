@@ -262,6 +262,7 @@ struct VPacketFilter
     std::optional<octet> packetFilterLength;
     std::optional<OctetString> packetFilterContent{};
 
+    VPacketFilter(const VPacketFilter &packetFilter);
     explicit VPacketFilter(const int &packetFilterId);
 };
 
@@ -277,6 +278,7 @@ struct VQoSRule
     std::optional<EQoSSegregationBit> segregation;
     std::optional<int> qfi;
 
+    VQoSRule(const VQoSRule &rule);
     VQoSRule(const octet &qri, const octet2 &ruleLength, const int &numberOfPacketFilter,
              const EQoSDqr &dqr, const EQoSOperationCode &ruleOperationCode);
 
