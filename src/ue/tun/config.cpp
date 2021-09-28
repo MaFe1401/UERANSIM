@@ -305,7 +305,7 @@ static void AddIpRoutes(const std::string &if_name, const std::string &table_nam
 {
     std::stringstream cmd;
     // cmd << "ip route add default dev " << if_name << " table " << table_name;
-    cmd << "route add -host 10.5.2.4 dev " << if_name << " table " << table_name;
+    cmd << "route add -host 10.5.2.4 dev " << if_name;
     std::string output = ExecStrict(cmd.str());
 }
 
