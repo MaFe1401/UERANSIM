@@ -142,7 +142,6 @@ void GtpTask::handleSessionModify(PduSessionResourceModify *pResource)
     uint64_t sessionInd = MakeSessionResInd(pResource->ueId, pResource->psi);
     auto &pduSession = m_pduSessions[sessionInd];
     auto toModifyOrAddFlows = pResource->qosFlowsToBeAddedOrModified->list;
-    //TODO: check for modification
     for (int i = 0; i < toModifyOrAddFlows.count; i++) {
         auto toModifyOrAddFlow = toModifyOrAddFlows.array[i];
         auto *flow = asn::New<ASN_NGAP_QosFlowSetupRequestItem>();
@@ -150,7 +149,16 @@ void GtpTask::handleSessionModify(PduSessionResourceModify *pResource)
         flow->qosFlowLevelQosParameters = *(toModifyOrAddFlow->qosFlowLevelQosParameters);
         flow->e_RAB_ID = toModifyOrAddFlow->e_RAB_ID;
         flow->iE_Extensions = toModifyOrAddFlow->iE_Extensions;
-        asn::SequenceAdd(*pduSession->qosFlows, flow);
+        bool flowModified = false;
+        asn::ForeachItem(*pduSession->qosFlows, [flow, &flowModified](ASN_NGAP_QosFlowSetupRequestItem &item){
+            if(item.qosFlowIdentifier == flow->qosFlowIdentifier) {
+                //TODO: modify flow
+                flowModified = true;
+            }
+        });
+        if(!flowModified) {
+            asn::SequenceAdd(*pduSession->qosFlows, flow);
+        }
     }
 }
 

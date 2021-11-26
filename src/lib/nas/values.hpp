@@ -259,28 +259,29 @@ struct VPacketFilter
 {
     int packetFilterId;
     std::optional<EPacketFilterDirection> direction;
-    std::optional<octet> packetFilterLength;
+    // TODO: parse packet filter content
     std::optional<OctetString> packetFilterContent{};
 
     VPacketFilter(const VPacketFilter &packetFilter);
     explicit VPacketFilter(const int &packetFilterId);
+
+    static void Encode(const VPacketFilter &value, OctetString &stream, EQoSOperationCode ruleOperationCode);
+    static VPacketFilter Decode(const OctetView &stream, EQoSOperationCode ruleOperationCode);
 };
 
 struct VQoSRule
 {
-    octet qri;
-    octet2 ruleLength;
-    EQoSDqr dqr;
-    EQoSOperationCode ruleOperationCode;
-    int numberOfPacketFilter;
+    octet qri{};
+    EQoSDqr dqr{};
+    EQoSOperationCode ruleOperationCode{};
     std::vector<VPacketFilter> packetFilters;
     std::optional<octet> rulePrecedence;
     std::optional<EQoSSegregationBit> segregation;
     std::optional<int> qfi;
 
     VQoSRule(const VQoSRule &rule);
-    VQoSRule(const octet &qri, const octet2 &ruleLength, const int &numberOfPacketFilter,
-             const EQoSDqr &dqr, const EQoSOperationCode &ruleOperationCode);
+    VQoSRule() = default;
+    //VQoSRule(const octet &qri, const EQoSDqr &dqr, const EQoSOperationCode &ruleOperationCode);
 
     static void Encode(const VQoSRule &value, OctetString &stream);
     static VQoSRule Decode(const OctetView &stream);

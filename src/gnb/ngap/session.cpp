@@ -85,6 +85,17 @@ void NgapTask::receiveSessionResourceModifyRequest(int amfId, ASN_NGAP_PDUSessio
                     8ull;
             }
 
+            ie = asn::ngap::GetProtocolIe(transfer, ASN_NGAP_ProtocolIE_ID_id_UL_NGU_UP_TNLModifyList);
+            if (ie)
+            {
+                //TODO
+            }
+
+            ie = asn::ngap::GetProtocolIe(transfer, ASN_NGAP_ProtocolIE_ID_id_AdditionalUL_NGU_UP_TNLInformation);
+            if(ie) {
+                //TODO
+            }
+
             ie = asn::ngap::GetProtocolIe(transfer, ASN_NGAP_ProtocolIE_ID_id_QosFlowAddOrModifyRequestList);
             if (ie)
             {
