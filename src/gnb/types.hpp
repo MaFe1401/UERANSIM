@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <set>
+
 #include <lib/app/monitor.hpp>
 #include <lib/asn/utils.hpp>
 #include <utils/common_types.hpp>
@@ -133,6 +135,7 @@ struct NgapUeContext
     int uplinkStream{};
     int downlinkStream{};
     AggregateMaximumBitRate ueAmbr{};
+    std::set<int> pduSessions{};
 
     explicit NgapUeContext(int ctxId) : ctxId(ctxId)
     {
@@ -143,8 +146,10 @@ struct RrcUeContext
 {
     const int ueId{};
 
-    int64_t initialRandomId = -1;
+    int64_t initialId = -1; // 39-bit value, or -1
+    bool isInitialIdSTmsi{}; // TMSI-part-1 or a random value
     long establishmentCause{};
+    std::optional<GutiMobileIdentity> sTmsi{};
 
     explicit RrcUeContext(const int ueId) : ueId(ueId)
     {

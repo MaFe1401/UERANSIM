@@ -99,7 +99,8 @@ class NgapTask : public NtsTask
     bool handleSctpStreamId(int amfId, int stream, const ASN_NGAP_NGAP_PDU &pdu);
 
     /* NAS transport */
-    void handleInitialNasTransport(int ueId, const OctetString &nasPdu, long rrcEstablishmentCause);
+    void handleInitialNasTransport(int ueId, const OctetString &nasPdu, long rrcEstablishmentCause,
+                                   const std::optional<GutiMobileIdentity> &sTmsi);
     void handleUplinkNasTransport(int ueId, const OctetString &nasPdu);
     void receiveDownlinkNasTransport(int amfId, ASN_NGAP_DownlinkNASTransport *msg);
     void deliverDownlinkNas(int ueId, OctetString &&nasPdu);
@@ -108,9 +109,9 @@ class NgapTask : public NtsTask
 
     /* PDU session management */
     void receiveSessionResourceSetupRequest(int amfId, ASN_NGAP_PDUSessionResourceSetupRequest *msg);
-    void receiveSessionResourceReleaseCommand(int amfId, ASN_NGAP_PDUSessionResourceReleaseCommand *msg);\
     void receiveSessionResourceModifyRequest(int amfId, ASN_NGAP_PDUSessionResourceModifyRequest *msg);
-    std::optional<NgapCause> setupPduSessionResource(PduSessionResource *resource);
+    void receiveSessionResourceReleaseCommand(int amfId, ASN_NGAP_PDUSessionResourceReleaseCommand *msg);
+    std::optional<NgapCause> setupPduSessionResource(NgapUeContext *ue, PduSessionResource *resource);
 
     /* UE context management */
     void receiveInitialContextSetup(int amfId, ASN_NGAP_InitialContextSetupRequest *msg);

@@ -2,7 +2,7 @@
   <a href="https://github.com/aligungr/UERANSIM"><img src="/.github/logo.png" width="75" title="UERANSIM"></a>
 </p>
 <p align="center">
-<img src="https://img.shields.io/badge/UERANSIM-v3.2.2-blue" />
+<img src="https://img.shields.io/badge/UERANSIM-v3.2.4-blue" />
 <img src="https://img.shields.io/badge/3GPP-R15-orange" />
 <img src="https://img.shields.io/badge/License-GPL--3.0-green"/>
 </p>
@@ -22,11 +22,11 @@ using it.
 In terms of 3GPP coverage, fundamental control plane features are done. However, some of them are in progress.
 More details can be found at [Feature Set](https://github.com/aligungr/UERANSIM/wiki/Feature-Set).
 
-At the same time, 5G-NR radio interface is under development but not complete yet. Currently we utilize the radio
+Meanwhile, 5G-NR radio interface is partially implemented but not completed yet. Currently, we utilize the radio
 interface over a simulated environment.
 
 <p align="center">
-<img src="https://img.shields.io/badge/Radio%20Interface-in%20progress-orange" alt="OS Linux"/>
+<img src="https://img.shields.io/badge/Radio%20Interface-simulated-orange" alt="OS Linux"/>
 <img src="https://img.shields.io/badge/Control%20Plane-functional-green" alt="OS Linux"/>  
 <img src="https://img.shields.io/badge/User%20Plane-functional-green" alt="OS Linux"/>
 </p>
@@ -54,8 +54,7 @@ You can support UERANSIM by:
 
 Copyright (c) 2021 ALİ GÜNGÖR.
 
-All source code and related files including documentation and wiki pages are licensed
-under [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.en.html),
-see [LICENSE](https://github.com/aligungr/UERANSIM/blob/master/LICENSE).
+All source code and related files including documentation and wiki pages are
+dual licensed with [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.en.html) and a commercial license.
 
-**Commercial Usage**: If you want to use UERANSIM for commercial purposes, please contact [ueransim@gmail.com](mailto:ueransim@gmail.com) to obtain a commercial license.
+Commercial usage of UERANSIM is **not** permitted with the GPL-3.0. If you want to use UERANSIM for commercial purposes, please contact [ueransim@gmail.com](mailto:ueransim@gmail.com) to buy a commercial license.

@@ -177,11 +177,14 @@ void GtpTask::handleSessionRelease(int ueId, int psi)
     m_rateLimiter->updateUeDownlinkLimit(ueId, 0);
 
     // And remove from PDU session table
-    uint32_t teid = m_pduSessions[sessionInd]->downTunnel.teid;
-    m_pduSessions.erase(sessionInd);
+    if (m_pduSessions.count(sessionInd))
+    {
+        uint32_t teid = m_pduSessions[sessionInd]->downTunnel.teid;
+        m_pduSessions.erase(sessionInd);
 
-    // And remove from the tree
-    m_sessionTree.remove(sessionInd, teid);
+        // And remove from the tree
+        m_sessionTree.remove(sessionInd, teid);
+    }
 }
 
 void GtpTask::handleUeContextDelete(int ueId)

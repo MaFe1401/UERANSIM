@@ -241,7 +241,7 @@ void NgapTask::receiveSessionResourceSetupRequest(int amfId, ASN_NGAP_PDUSession
                 resource->qosFlows = asn::WrapUnique(ptr, asn_DEF_ASN_NGAP_QosFlowSetupRequestList);
             }
 
-            auto error = setupPduSessionResource(resource);
+            auto error = setupPduSessionResource(ue, resource);
             if (error.has_value())
             {
                 auto *tr = asn::New<ASN_NGAP_PDUSessionResourceSetupUnsuccessfulTransfer>();
@@ -347,7 +347,7 @@ void NgapTask::receiveSessionResourceSetupRequest(int amfId, ASN_NGAP_PDUSession
                       static_cast<int>(successList.size()), static_cast<int>(failedList.size()));
 }
 
-std::optional<NgapCause> NgapTask::setupPduSessionResource(PduSessionResource *resource)
+std::optional<NgapCause> NgapTask::setupPduSessionResource(NgapUeContext *ue, PduSessionResource *resource)
 {
     if (resource->sessionType != PduSessionType::IPv4)
     {
@@ -375,6 +375,8 @@ std::optional<NgapCause> NgapTask::setupPduSessionResource(PduSessionResource *r
     auto *w = new NmGnbNgapToGtp(NmGnbNgapToGtp::SESSION_CREATE);
     w->resource = resource;
     m_base->gtpTask->push(w);
+
+    ue->pduSessions.insert(resource->psi);
 
     return {};
 }
@@ -417,6 +419,8 @@ void NgapTask::receiveSessionResourceReleaseCommand(int amfId, ASN_NGAP_PDUSessi
         w->ueId = ue->ctxId;
         w->psi = psi;
         m_base->gtpTask->push(w);
+
+        ue->pduSessions.erase(psi);
     }
 
     for (auto &psi : psIds)

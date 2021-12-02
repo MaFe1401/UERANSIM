@@ -19,7 +19,7 @@ Supi Supi::Parse(const std::string &supi)
     if (supi[0] == 'i' && supi[1] == 'm' && supi[2] == 's' && supi[3] == 'i' && supi[4] == '-')
     {
         std::string val = supi.substr(5);
-        if (val.size() != 15 && val.size() != 16)
+        if (val.size() < 4u || val.size() > 15u)
             throw std::runtime_error("invalid IMSI value");
         for (char c : val)
             if (c < '0' || c > '9')
@@ -27,6 +27,21 @@ Supi Supi::Parse(const std::string &supi)
         return Supi{"imsi", val};
     }
     throw std::runtime_error("invalid SUPI value");
+}
+
+int64_t GutiMobileIdentity::toTmsiValue() const
+{
+    return (static_cast<int64_t>(this->tmsi)) | (static_cast<int64_t>(this->amfPointer) << 32LL) |
+           (static_cast<int64_t>(this->amfSetId) << 38LL);
+}
+
+GutiMobileIdentity GutiMobileIdentity::FromSTmsi(int64_t sTmsi)
+{
+    GutiMobileIdentity res;
+    res.tmsi = octet4{static_cast<uint32_t>(sTmsi & 0xFFFFFFLL)};
+    res.amfPointer = static_cast<int>(((sTmsi >> 32LL) & 0b111111LL));
+    res.amfSetId = static_cast<int>(((sTmsi >> 38LL) & 0b1111111111LL));
+    return res;
 }
 
 Json ToJson(const Supi &v)
