@@ -16,7 +16,7 @@ add_subdirectory(src/asn/ngap)
 add_subdirectory(src/lib)
 add_subdirectory(src/gnb)
 add_subdirectory(src/ue)
-
+add_subdirectory(src/tsntranslator)
 #################### GNB EXECUTABLE ####################
 
 add_executable(nr-gnb src/gnb.cpp)

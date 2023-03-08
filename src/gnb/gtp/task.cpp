@@ -7,7 +7,7 @@
 //
 
 #include "task.hpp"
-
+#include <iterator>
 #include <gnb/gtp/proto.hpp>
 #include <gnb/rls/task.hpp>
 #include <utils/constants.hpp>
@@ -215,6 +215,35 @@ void GtpTask::handleUeContextDelete(int ueId)
     m_ueContexts.erase(ueId);
 }
 
+ASN_NGAP_FiveQI_t GtpTask::mapto5QI(int pcp){
+
+    ASN_NGAP_FiveQI_t fiveqi;
+    switch (pcp) {
+        case 2: return fiveqi=(long)70;
+        case 0: return fiveqi=(long)9;
+        case 4: return fiveqi=(long)4;
+        case 6: return fiveqi=(long)82;
+        case 8: return fiveqi=(long)84;
+        case 10: return fiveqi=(long)86;
+        case 12: return fiveqi=(long)83;
+        case 14: return fiveqi=(long)85;
+    }
+    return 9;
+}
+
+/*int GtpTask::searchQoSFlow(int fiveqi, int ueId, int psi){
+    
+    uint64_t sessionInd = MakeSessionResInd(ueId, psi);
+    int i = 0;
+    auto &pduSession = m_pduSessions[sessionInd];
+   for (i=0;i<4;i++){
+    if (pduSession->qosFlows->list.array[i]->qosFlowLevelQosParameters.qosCharacteristics.choice.nonDynamic5QI == fiveqi){
+        m_logger->info("QoS flow ID is [%d]", pduSession->qosFlows->list.array[i]->qosFlowIdentifier);
+        return pduSession->qosFlows->list.array[i]->qosFlowIdentifier;
+    }
+   }
+    return 0;
+}*/
 void GtpTask::handleUplinkData(int ueId, int psi, OctetString &&pdu)
 {
     const uint8_t *data = pdu.data();
@@ -239,11 +268,28 @@ void GtpTask::handleUplinkData(int ueId, int psi, OctetString &&pdu)
         gtp.payload = std::move(pdu);
         gtp.msgType = gtp::GtpMessage::MT_G_PDU;
         gtp.teid = pduSession->upTunnel.teid;
-
+        m_logger->info("DSCP is %d", data[1] >> 4 & 0xF);
+        int dscp = data[1] >> 4 & 0xF;
+        ASN_NGAP_FiveQI_t fiveqi = mapto5QI(dscp);
+        m_logger->info("5QI is %d", fiveqi);
+       // int qosFlowid = searchQoSFlow(fiveqi, ueId, psi);
         auto ul = std::make_unique<gtp::UlPduSessionInformation>();
-        // TODO: currently using first QSI
-        ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[0]->qosFlowIdentifier);
+        // PCP --> QoS flow 
+        if (fiveqi==9){// PCP = 0
+             ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[0]->qosFlowIdentifier);
+        }
+        else if (fiveqi==70){// PCP = 1
+             ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[1]->qosFlowIdentifier);
 
+        }
+        else if (fiveqi==4){// PCP = 2
+             ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[2]->qosFlowIdentifier);
+
+        }
+        else if (fiveqi==82){// PCP = 3
+             ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[3]->qosFlowIdentifier);
+
+        }
         auto cont = new gtp::PduSessionContainerExtHeader();
         cont->pduSessionInformation = std::move(ul);
         gtp.extHeaders.push_back(std::unique_ptr<gtp::GtpExtHeader>(cont));

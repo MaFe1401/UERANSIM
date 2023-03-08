@@ -9,7 +9,7 @@
 #pragma once
 
 #include "utils.hpp"
-
+#include <asn/ngap/ASN_NGAP_FiveQI.h>
 #include <memory>
 #include <thread>
 #include <unordered_map>
@@ -54,7 +54,8 @@ class GtpTask : public NtsTask
     void handleSessionRelease(int ueId, int psi);
     void handleUeContextDelete(int ueId);
     void handleUplinkData(int ueId, int psi, OctetString &&data);
-
+    ASN_NGAP_FiveQI_t mapto5QI(int pcp);
+    int searchQoSFlow(int fiveqi, int ueId, int psi);
     void updateAmbrForUe(int ueId);
     void updateAmbrForSession(uint64_t pduSession);
 };
