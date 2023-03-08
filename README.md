@@ -68,3 +68,11 @@ Commercial usage of UERANSIM is **not** permitted with the GPL-3.0. If you want 
 `sudo brctl addif br0 enp0s3`
 `sudo ifconfig enp0s3 0.0.0.0`
 `sudo ifconfig br0 192.168.2.2 netmask 255.255.255.0 up`
+`sudo ebtables -t nat -A PREROUTING -p 802_1Q --vlan-prio 0 -j mark --set-mark 0x0`
+`sudo ebtables -t nat -A PREROUTING -p 802_1Q --vlan-prio 1 -j mark --set-mark 0x1`
+`sudo ebtables -t nat -A PREROUTING -p 802_1Q --vlan-prio 2 -j mark --set-mark 0x2`
+`sudo ebtables -t nat -A PREROUTING -p 802_1Q --vlan-prio 3 -j mark --set-mark 0x3`
+`sudo ebtables -t nat -A PREROUTING -p 802_1Q --vlan-prio 4 -j mark --set-mark 0x4`
+`sudo ebtables -t nat -A PREROUTING -p 802_1Q --vlan-prio 5 -j mark --set-mark 0x5`
+`sudo ebtables -t nat -A PREROUTING -p 802_1Q --vlan-prio 6 -j mark --set-mark 0x6`
+`sudo ebtables -t nat -A PREROUTING -p 802_1Q --vlan-prio 7 -j mark --set-mark 0x7`
