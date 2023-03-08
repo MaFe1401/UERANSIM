@@ -58,3 +58,13 @@ All source code and related files including documentation and wiki pages are
 dual licensed with [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.en.html) and a commercial license.
 
 Commercial usage of UERANSIM is **not** permitted with the GPL-3.0. If you want to use UERANSIM for commercial purposes, please contact [ueransim@gmail.com](mailto:ueransim@gmail.com) to buy a commercial license.
+
+## Setup
+
+`sudo sysctl -w net.ipv4.ip_forward=1`
+`sudo sysctl -w net.ipv6.conf.all.forwarding=1`
+
+`sudo brctl addbr br0`
+`sudo brctl addif br0 enp0s3`
+`sudo ifconfig enp0s3 0.0.0.0`
+`sudo ifconfig br0 192.168.2.2 netmask 255.255.255.0 up`
