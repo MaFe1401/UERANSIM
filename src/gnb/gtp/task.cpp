@@ -215,18 +215,18 @@ void GtpTask::handleUeContextDelete(int ueId)
     m_ueContexts.erase(ueId);
 }
 
-ASN_NGAP_FiveQI_t GtpTask::mapto5QI(int pcp){
+ASN_NGAP_FiveQI_t GtpTask::mapto5QI(int dscp){
 
     ASN_NGAP_FiveQI_t fiveqi;
-    switch (pcp) {
-        case 2: return fiveqi=(long)70;
-        case 0: return fiveqi=(long)9;
-        case 4: return fiveqi=(long)4;
-        case 6: return fiveqi=(long)82;
-        case 8: return fiveqi=(long)84;
-        case 10: return fiveqi=(long)86;
-        case 12: return fiveqi=(long)83;
-        case 14: return fiveqi=(long)85;
+    switch (dscp) {
+        case 32: return fiveqi=(long)6;//PCP = 1 Background
+        case 0: return fiveqi=(long)6;//PCP = 0 Best effort
+        case 64: return fiveqi=(long)4;//PCP = 2 Excellent effort
+        case 96: return fiveqi=(long)4;//PCP = 3 Critical applications
+        case 128: return fiveqi=(long)85;//PCP = 4 Video
+        case 160: return fiveqi=(long)85;//PCP = 5 Voice
+        case 192: return fiveqi=(long)86;//PCP = 6 Internetwork control
+        case 224: return fiveqi=(long)86;//PCP = 7 Network control
     }
     return 9;
 }
@@ -268,25 +268,26 @@ void GtpTask::handleUplinkData(int ueId, int psi, OctetString &&pdu)
         gtp.payload = std::move(pdu);
         gtp.msgType = gtp::GtpMessage::MT_G_PDU;
         gtp.teid = pduSession->upTunnel.teid;
-        m_logger->info("DSCP is %x", data[1]  & 0xFF);
+        m_logger->info("DSCP is %d", data[1]  & 0xFF);
         int dscp = data[1]  & 0xFF;
+
         ASN_NGAP_FiveQI_t fiveqi = mapto5QI(dscp);
         m_logger->info("5QI is %d", fiveqi);
        // int qosFlowid = searchQoSFlow(fiveqi, ueId, psi);
         auto ul = std::make_unique<gtp::UlPduSessionInformation>();
         // PCP --> QoS flow 
-        if (fiveqi==9){// PCP = 0
+        if (fiveqi==6){// PCP = 1 and PCP = 0
              ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[0]->qosFlowIdentifier);
         }
-        else if (fiveqi==70){// PCP = 1
+        else if (fiveqi==4){// PCP = 2 and PCP = 3
              ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[1]->qosFlowIdentifier);
 
         }
-        else if (fiveqi==4){// PCP = 2
+        else if (fiveqi==85){// PCP = 4 and PCP = 5 
              ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[2]->qosFlowIdentifier);
 
         }
-        else if (fiveqi==82){// PCP = 3
+        else if (fiveqi==86){// PCP = 6 and PCP = 7
              ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[3]->qosFlowIdentifier);
 
         }
