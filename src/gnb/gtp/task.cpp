@@ -268,8 +268,8 @@ void GtpTask::handleUplinkData(int ueId, int psi, OctetString &&pdu)
         gtp.payload = std::move(pdu);
         gtp.msgType = gtp::GtpMessage::MT_G_PDU;
         gtp.teid = pduSession->upTunnel.teid;
-        m_logger->info("DSCP is %d", data[1] >> 4 & 0xF);
-        int dscp = data[1] >> 4 & 0xF;
+        m_logger->info("DSCP is %x", data[1]  & 0xFF);
+        int dscp = data[1]  & 0xFF;
         ASN_NGAP_FiveQI_t fiveqi = mapto5QI(dscp);
         m_logger->info("5QI is %d", fiveqi);
        // int qosFlowid = searchQoSFlow(fiveqi, ueId, psi);
