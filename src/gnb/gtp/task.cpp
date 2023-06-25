@@ -227,6 +227,7 @@ ASN_NGAP_FiveQI_t GtpTask::mapto5QI(int dscp){
         case 160: return fiveqi=(long)85;//PCP = 5 Voice
         case 192: return fiveqi=(long)86;//PCP = 6 Internetwork control
         case 224: return fiveqi=(long)86;//PCP = 7 Network control
+        case 252: return fiveqi=(long)86;//PTP
     }
     return 6;
 }
