@@ -223,11 +223,12 @@ ASN_NGAP_FiveQI_t GtpTask::mapto5QI(int dscp){
         case 0: return fiveqi=(long)6;//PCP = 0 Best effort
         case 64: return fiveqi=(long)67;//PCP = 2 Excellent effort
         case 96: return fiveqi=(long)67;//PCP = 3 Critical applications
-        case 128: return fiveqi=(long)85;//PCP = 4 Video
-        case 160: return fiveqi=(long)85;//PCP = 5 Voice
-        case 192: return fiveqi=(long)86;//PCP = 6 Internetwork control
-        case 224: return fiveqi=(long)86;//PCP = 7 Network control
-        case 252: return fiveqi=(long)86;//PTP
+        default: return 6;
+        //case 128: return fiveqi=(long)85;//PCP = 4 Video
+        //case 160: return fiveqi=(long)85;//PCP = 5 Voice
+        //case 192: return fiveqi=(long)86;//PCP = 6 Internetwork control
+        //case 224: return fiveqi=(long)86;//PCP = 7 Network control
+        //case 252: return fiveqi=(long)86;//PTP
     }
     return 6;
 }
@@ -279,10 +280,11 @@ void GtpTask::handleUplinkData(int ueId, int psi, OctetString &&pdu)
         // PCP --> QoS flow 
         if (fiveqi==6){// PCP = 1 and PCP = 0
              ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[0]->qosFlowIdentifier);
+             m_logger->info("QoS flow 1");
         }
         else if (fiveqi==67){// PCP = 2 and PCP = 3
              ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[1]->qosFlowIdentifier);
-
+             m_logger->info("QoS flow 2");
         }
         else if (fiveqi==85){// PCP = 4 and PCP = 5 
              ul->qfi = static_cast<int>(pduSession->qosFlows->list.array[2]->qosFlowIdentifier);
